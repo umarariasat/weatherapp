@@ -1,0 +1,194 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
+// Main WeatherCard
+export default function WeatherCard({ searchCity }) {
+  const [weather, setWeather] = useState(null);
+
+  useEffect(() => {
+    if (!searchCity?.trim()) return;
+
+    const API_KEY = "2446aa6befab420ae365c88d4e92c5cf";
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${searchCity}&units=metric&appid=${API_KEY}`;
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.cod !== 200) {
+          setWeather(null);
+          return;
+        }
+        setWeather(data);
+      })
+      .catch((err) => console.error(err));
+  }, [searchCity]);
+
+  if (!weather || !weather.main || !weather.weather) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", fontSize: "50px", padding: "40px" }}>
+        Loading Data From API...
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        padding: "20px",
+        background: "linear-gradient(-135deg, #57769fff, #6b88b3, #8ca3c3, #a0b3cc, #c9d3dfff)",
+        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.5)",
+        gap: "15px",
+        borderRadius: "15px",
+        width: "94%",
+        margin: "20px auto",
+        flexWrap: "wrap",
+      }}
+    >
+      {/* Left: Main Weather Info */}
+      <div
+        style={{
+          background: "linear-gradient(-135deg, #5177a9ff, #6b88b3, #8ca3c3, #c9d3dfff)",
+          width: "45%",
+          alignItems: "center",
+          borderRadius: "14px",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 4px 15px rgba(3, 19, 49, 0.5)",
+          padding: "20px",
+          gap: "20px",
+          flex: 1,
+        }}
+      >
+        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+          {/* Top-left */}
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", position: "absolute", top: "0", left: "0" }}>
+            <p>{weather.name}, {weather.sys.country}</p>
+            <h2>{new Date().toLocaleDateString()}</h2>
+          </div>
+
+          {/* Center */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+            <img
+              src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+              width="150"
+              height="150"
+              alt={weather.weather[0].description}
+            />
+          </div>
+
+          {/* Bottom-right */}
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", position: "absolute", bottom: "0", right: "0" }}>
+            <h1>{weather.main.temp}°C</h1>
+            <p>Feels like {weather.main.feels_like}°C</p>
+            <h2>{weather.weather[0].description}</h2>
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Highlights */}
+      <div
+        style={{
+          background: "linear-gradient(-135deg, #5177a9ff, #6d83b5, #6b88b3, #8ca3c3, #c9d3dfff)",
+          display: "flex",
+          boxShadow: "0 4px 15px rgba(3, 19, 49, 0.5)",
+          flexDirection: "column",
+          padding: "30px",
+          borderRadius: "14px",
+          gap: "20px",
+          flex: 1,
+        }}
+      >
+        <h1 style={{ textAlign: "center" }}>Today's Highlight</h1>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "15px", width: "100%" }}>
+          <Highlight title="Wind Status" value={`${weather.wind.speed} km/h`} icon="https://cdn-icons-png.flaticon.com/512/1146/1146869.png" />
+          <Highlight title="Humidity" value={`${weather.main.humidity}%`} icon="https://cdn-icons-png.flaticon.com/512/728/728093.png" />
+          <Highlight title="Pressure" value={`${weather.main.pressure} hPa`} icon="https://cdn-icons-png.flaticon.com/512/4837/4837671.png" />
+          <Highlight title="Visibility" value={`${(weather.visibility / 1000).toFixed(1)} km`} icon="https://cdn-icons-png.flaticon.com/512/445/445270.png" />
+          <Highlight title="Sunrise" value={new Date(weather.sys.sunrise * 1000).toLocaleTimeString()} icon="https://cdn-icons-png.flaticon.com/512/869/869869.png" />
+          <Highlight title="Sunset" value={new Date(weather.sys.sunset * 1000).toLocaleTimeString()} icon="https://cdn-icons-png.flaticon.com/512/3039/3039280.png" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Reusable Highlight Component
+function Highlight({ title, value, icon }) {
+  return (
+    <div
+      style={{
+        background: "linear-gradient(-135deg, #4a6fa1, #6d83b5, #a7b5c9, #d9dbe0, #8a8fa3,0.1)",
+        backdropFilter: "blur(20px)",
+        boxShadow: "0 4px 15px rgba(3, 19, 49, 0.5)",
+        padding: "15px",
+        borderRadius: "10px",
+        textAlign: "center",
+      }}
+    >
+      <p style={{ marginBottom: "8px", fontSize: "1.2rem", marginTop: "0", opacity: 0.7, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src={icon} alt={title} style={{ width: "25px", height: "25px", marginRight: "8px", filter: "grayscale(100%) brightness(90%)" }} />
+        {title}
+      </p>
+      <h2>{value}</h2>
+    </div>
+  );
+}
+
+// Hourly Forecast - same style
+export function HourlyForecast({ hourlyData }) {
+  if (!hourlyData) return null;
+
+  return (
+    <div style={{ display: "flex", overflowX: "auto", gap: "15px", padding: "20px" }}>
+      {hourlyData.map((hour, index) => (
+        <div
+          key={index}
+          style={{
+            minWidth: "120px",
+            background: "linear-gradient(-135deg, #5177a9ff, #6b88b3, #8ca3c3, #c9d3dfff)",
+            padding: "15px",
+            borderRadius: "14px",
+            boxShadow: "0 4px 15px rgba(3,19,49,0.5)",
+            color: "white",
+            textAlign: "center",
+          }}
+        >
+          <p>{new Date(hour.dt * 1000).getHours()}:00</p>
+          <img src={`https://openweathermap.org/img/wn/${hour.weather[0].icon}@2x.png`} width="50" height="50" alt={hour.weather[0].description} />
+          <p>{Math.round(hour.temp)}°C</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// 5-Day Forecast - same style
+export function DayForecast({ dailyData }) {
+  if (!dailyData) return null;
+
+  return (
+    <div style={{ display: "flex", gap: "15px", padding: "20px", flexWrap: "wrap" }}>
+      {dailyData.map((day, index) => (
+        <div
+          key={index}
+          style={{
+            flex: "1 1 120px",
+            background: "linear-gradient(-135deg, #5177a9ff, #6b88b3, #8ca3c3, #c9d3dfff)",
+            padding: "15px",
+            borderRadius: "14px",
+            boxShadow: "0 4px 15px rgba(3,19,49,0.5)",
+            color: "white",
+            textAlign: "center",
+          }}
+        >
+          <p>{new Date(day.dt * 1000).toLocaleDateString("en-US", { weekday: "short" })}</p>
+          <img src={`https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`} width="50" height="50" alt={day.weather[0].description} />
+          <p>{Math.round(day.temp.max)}°C / {Math.round(day.temp.min)}°C</p>
+        </div>
+      ))}
+    </div>
+  );
+}
